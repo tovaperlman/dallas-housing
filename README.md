@@ -17,17 +17,27 @@ The use case on a service provider level helps to inform individual providers on
 
 We are excited to continue working with our client and refine our use case over time. The following questions will guide our exploratory data analysis:
 1. Time - How can we use our data structures to tell the story of a client over time? 
+
       a. At what time during the year are people more likely to enter or exit the system? - Tyler
+      
       b. Temporal data on length of stay in TH, RRH or PSH
+      
       c. Look at the date of engagement and move in data separately. How long does it take from being entered into the system to finding permanent housing?
       
 2. Space - How are clients moving throughout space
+
     a. How leverageable is the location data in the datasets? Since there is only one location value per individual per table, what inference can we derive from these spatial data?
-    b. What are the most popular and least popular services people need? Does this depend on time of year? Do different demographic groups require different types of services?       c. Could do small multiple maps of services by demographic group
+    
+    b. What are the most popular and least popular services people need? Does this depend on time of year? Do different demographic groups require different types of services? 
+    
+    c. Could do small multiple maps of services by demographic group
     
 3. Recidivism - Predictors for chronic homeslessness 
+
     a. Examination of most popular PriorResidence - is this a predictor for chronic homelessness?
+    
     b. Analysis of continuous stays per individual, average duration of stay, average time between recidivating
+    
     c. Is recidivism largely driven by internal factors (e.g., demographics, income) or external (e.g., services received) or both? Can we identify particular combinations of     
     services that are more likely to result in recidivism?
 

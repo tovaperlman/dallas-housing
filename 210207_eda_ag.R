@@ -167,6 +167,8 @@ dat$Race[which (dat$Races == "Black or African American")] <- "Black or African 
 dat$Race[which (dat$Races == "American Indian or Alaska Native")] <- "American Indian or Alaska Native" 
 dat$Race[which (grepl(",", dat$Races, fixed=TRUE))] <- "Two or More Races"
 
+write.csv(dat, file = "210207_client_dat_race_by_program_type_eda_ag.csv")
+
 #revise the following with 6 levels over the x axis, adjacent bar chart https://www.r-graph-gallery.com/48-grouped-barplot-with-ggplot2.html
 #or make a plot for each race
 

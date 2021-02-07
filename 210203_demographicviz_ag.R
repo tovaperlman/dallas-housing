@@ -1,5 +1,6 @@
 options(scipen=10000000)
 
+<<<<<<< Updated upstream
 #install.packages('tidyverse')
 library(tidyverse)
 #install.packages("readxl")
@@ -14,6 +15,22 @@ setwd("C:/Users/gault/OneDrive/UPenn/Fourth Semester/MUSA Practicum/data/origina
 
 demographicsexcel <- "Upenn.xlsx"
 demographics <- read.csv("C:/Users/gault/OneDrive/UPenn/Fourth Semester/MUSA Practicum/data/client_dat.csv")
+=======
+install.packages('tidyverse')
+library(tidyverse)
+install.packages("readxl")
+install.packages("openxlsx")
+library(readxl)
+library(openxlsx)
+install.packages(networkD3)
+library(networkD3)
+
+setwd('C:/Users/tovap/Documents/Spring 2020 classes/Practicum')
+
+
+demographicsexcel <- "C:/Users/tovap/Documents/Spring 2020 classes/Practicum/UPenn.xlsx"
+
+>>>>>>> Stashed changes
 
 #Trying to get all the sheets in one
 composite_file <-  loadWorkbook('UPenn Services 100114 - 123120.xlsx')
@@ -24,7 +41,11 @@ for(i in 1:length(fileNames))
 }
 
 #Trying to get all the sheets in one
+<<<<<<< Updated upstream
 composite_file <-  loadWorkbook("UPenn.xlsx")
+=======
+composite_file <-  loadWorkbook("C:/Users/tovap/Documents/Spring 2020 classes/Practicum/UPenn.xlsx")
+>>>>>>> Stashed changes
 fileNames <- sheets(composite_file)
 for(i in 1:length(fileNames))
 {
@@ -63,8 +84,11 @@ reorder_size <- function(x) {
   factor(x, levels = names(sort(table(x), decreasing = TRUE)))
 }
 
+<<<<<<< Updated upstream
 
 
+=======
+>>>>>>> Stashed changes
 #Race and Gender by proportion
 Bigdata%>%
   select(Races, Gender, DisablingCondition) %>%

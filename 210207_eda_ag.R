@@ -22,7 +22,7 @@ plotTheme <- theme(text = element_text( family = "Avenir", color = "black"),
 palette4 <- c("#3a7d7c","#ffa137","#ff4400","#065125")
 palette5 <- c("#03254c","#1167b1","#64b5f6","#2196f3","#bbdefb")
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ES <- read_excel("UPenn.xlsx", sheet = "ES")
 SH <- read_excel("UPenn.xlsx", sheet = "SH")
@@ -34,7 +34,7 @@ PH <- read_excel("UPenn.xlsx", sheet = "PH")
 
 dat <- rbind(ES,SH,SO,TH,PSH,RRH,PH)
 
-write.csv(dat, file = "client_dat.csv")
+#write.csv(dat, file = "client_dat.csv")
 
 serv_ES <- read_excel("UPenn Services 100114 - 123120.xlsx", sheet = "ES") 
 
@@ -138,7 +138,7 @@ OPH_clients <- merge(serv_OPH_recent, OPH_count, by = "Client ID", all.x = TRUE)
   rename(n_OPH = n)
 
 serv_dat <- rbind(serv_ES,serv_SH,serv_SO,serv_TH,serv_PSH,serv_RRH,serv_OPH)
-write.csv(serv_dat, file = "services_dat.csv")
+#write.csv(serv_dat, file = "services_dat.csv")
 
 dat <- merge (dat, RRH_clients, by.x = "clientid", by.y = "Client ID", all.x = TRUE) %>%
   dplyr::select (-`Associated Program`, -`Service`, -`Enroll ID`, -`Family ID`)
@@ -167,7 +167,7 @@ dat$Race[which (dat$Races == "Black or African American")] <- "Black or African 
 dat$Race[which (dat$Races == "American Indian or Alaska Native")] <- "American Indian or Alaska Native" 
 dat$Race[which (grepl(",", dat$Races, fixed=TRUE))] <- "Two or More Races"
 
-write.csv(dat, file = "210207_client_dat_race_by_program_type_eda_ag.csv")
+#write.csv(dat, file = "210207_client_dat_race_by_program_type_eda_ag.csv")
 
 #revise the following with 6 levels over the x axis, adjacent bar chart https://www.r-graph-gallery.com/48-grouped-barplot-with-ggplot2.html
 #or make a plot for each race

@@ -1,6 +1,6 @@
 # Progress Report - Week 2
 
-This is a progress report for week 1 of MUSA 801 - Dallas Housing. 
+This is a progress report for week 2 of MUSA 801 - Dallas Housing. 
 
 Authors: Tyler Bradford, Al-Jalil Gault, Tova Perlman
 

@@ -6,7 +6,7 @@ Authors: Tyler Bradford, Al-Jalil Gault, Tova Perlman
 
 ## 1. Use Case
 
-We plan to follow the trajectory of racial demographic groups and people who recidivate in our dataset to see if there is a disparity in ways people are flowing through the system. We will then use this information to build a model that prioritizes who needs early interventions.
+We plan to follow the trajectory of racial demographic groups and people who recidivate in our dataset to see if there is a disparity in ways people are flowing through the system. We will then use this information to build a model that prioritizes who needs early interventions. We also hope to model total demand for permanent housing services. We want to look at the total people receiving homelessness services and see who finds unsubsidized private housing, who can obtain subsidized private housing, and who gets permanent public housing."
 
 
 ## 2. Purpose of Exploratory Analysis

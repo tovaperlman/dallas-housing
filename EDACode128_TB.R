@@ -10,7 +10,8 @@ library(ggalluvial)
 library(stringr)
 library(ggfittext)
 
-setwd("C:/Users/ctb80/Box/Practicum_Dallas")
+#setwd("C:/Users/ctb80/Box/Practicum_Dallas")
+setwd("~/Spring2021/MUSA801")
 
 # Read demographic data
 composite_file <- loadWorkbook('UPenn.xlsx')
@@ -29,12 +30,14 @@ PH_Dem <- PH
 ES_Dem <- ES
 
 # Read Services Data
-composite_file <- loadWorkbook('UPenn Services 100114 - 123120.xlsx')
+composite_file <- loadWorkbook('UPennServices.xlsx')
 fileNames <- sheets(composite_file)
 for(i in 1:length(fileNames))
 {
-  assign(fileNames[i],readWorkbook(composite_file,sheet = i, detectDates = T))
+  assign(fileNames[i], read_xlsx('UPennServices.xlsx', sheet = str(fileNames[i])))
+  #assign(fileNames[i],readWorkbook(composite_file,sheet = i, detectDates = T))
 }
+
 
 TH$prog_type = 'TH'
 PSH$prog_type = 'PSH'
@@ -45,16 +48,10 @@ ES$prog_type = 'ES'
 SH$prog_type = 'SH'
 
 
-
 # Alluvial plot # 1
 # Just start with Transitional Housing into OPH, PH, RRH
 # Join 3 tables to TH, group by TH, housed type, count unique ppl
 
-
-TH$prog_type = 'TH'
-PSH$prog_type = 'PSH'
-OPH$prog_type = 'OPH'
-RRH$prog_type = 'RRH'
 
 aluv_test <- TH %>% select(Client.ID, prog_type) %>%
   rename(start=prog_type)
@@ -194,7 +191,45 @@ ggplot(as.data.frame(priorToExit %>% filter(n>150)),
 
 # TB TO DO: Data wrangling and aggregate statistics about recidivism
 
+# find all people that were housed
+# join the earliest homelessness date that happened after
 
+housed <- rbind(OPH, PSH, RRH) %>% select('Client ID', 'Service Date')
+housed$`Service Date` <- lubridate::ymd(housed$`Service Date`)
+housed <- housed[order(housed$`Client ID`, housed$'Service Date'),] # order by client ID, then service date
+housed <- housed %>% 
+  rename(HousedDate = 'Service Date', ClientID = 'Client ID') %>%
+  group_by(ClientID) %>%
+  summarise(HousedDate=max(HousedDate))
+  
+
+homeless <- rbind(SO, ES, TH, SH) %>% select('Client ID', 'Service Date')
+homeless$`Service Date` <- lubridate::ymd(homeless$`Service Date`)
+homeless <- homeless[order(homeless$`Client ID`, homeless$'Service Date'),]
+homeless <- homeless %>% rename(HomelessDate = 'Service Date', ClientID = 'Client ID')
+homeless <- unique(homeless)
+
+# This isnt working
+homeless_sub <- homeless %>%
+  filter(ClientID %in% housed$ClientID)
+
+
+dplyrjoin <- housed %>%
+  left_join(homeless)[order(dplyrjoin$ClientID, dplyrjoin$HomelessDate),]
+  #filter(HousedDate < HomelessDate) #this appears to not return results
+
+#it would appear that there are no homeless services being rendered after housing services...
+  
+
+
+library('sqldf')
+test <- sqldf("
+           SELECT *
+           FROM housed h1
+           LEFT JOIN homeless h2 
+            ON h1.`Client ID` = h2.`Client ID` 
+            AND h1.`HousedDate` < h2.`HomelessDate`
+           ")
 
 ### ARCHIVE CODE ###
 

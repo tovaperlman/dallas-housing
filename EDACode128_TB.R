@@ -9,43 +9,58 @@ library(kableExtra)
 library(ggalluvial)
 library(stringr)
 library(ggfittext)
+library(janitor)
 
-#setwd("C:/Users/ctb80/Box/Practicum_Dallas")
-setwd("~/Spring2021/MUSA801")
+setwd("C:/Users/ctb80/Box/Practicum_Dallas")
 
 # Read demographic data
+# Stick with this for now but eventually migrate it to the lapply method used below
 composite_file <- loadWorkbook('UPenn.xlsx')
 fileNames <- sheets(composite_file)
 for(i in 1:length(fileNames))
 {
   assign(fileNames[i],readWorkbook(composite_file,sheet = i, detectDates = T))
 }
+
 # Rename demographic data files
-TH_Dem <- TH%>% select(-ClientID)
-SO_Dem <- SO
-SH_Dem <- SH 
-PSH_Dem <- PSH
-RRH_Dem <- RRH
-PH_Dem <- PH
-ES_Dem <- ES
+TH_Demo <- TH %>% select(-ClientID)
+SO_Demo <- SO
+SH_Demo <- SH 
+PSH_Demo <- PSH
+RRH_Demo <- RRH
+PH_Demo <- PH
+ES_Demo <- ES
 
 # Read Services Data
-composite_file <- loadWorkbook('UPennServices.xlsx')
-fileNames <- sheets(composite_file)
-for(i in 1:length(fileNames))
-{
-  assign(fileNames[i], read_xlsx('UPennServices.xlsx', sheet = str(fileNames[i])))
-  #assign(fileNames[i],readWorkbook(composite_file,sheet = i, detectDates = T))
-}
+sheets <- excel_sheets('UPenn Services 100114 - 123120.xlsx')
+lst <- lapply(sheets, function(i)read_excel('UPenn Services 100114 - 123120.xlsx', sheet = i))
+names(lst) <- sheets ##Add names
+list2env(lst ,.GlobalEnv)
 
+TH_Serv <- TH
+SO_Serv <- SO
+SH_Serv <- SH 
+PSH_Serv <- PSH
+RRH_Serv <- RRH
+OPH_Serv <- OPH
+ES_Serv <- ES
 
-TH$prog_type = 'TH'
-PSH$prog_type = 'PSH'
-OPH$prog_type = 'OPH'
-RRH$prog_type = 'RRH'
-SO$prog_type = 'SO'
-ES$prog_type = 'ES'
-SH$prog_type = 'SH'
+# TO DO: Turn these into apply functions
+PSH_Serv$`Service Date`<- excel_numeric_to_date(PSH_Serv$`Service Date`)
+SO_Serv$`Service Date`<- excel_numeric_to_date(SO_Serv$`Service Date`)
+ES_Serv$`Service Date`<- excel_numeric_to_date(ES_Serv$`Service Date`)
+TH_Serv$`Service Date`<- excel_numeric_to_date(TH_Serv$`Service Date`)
+SH_Serv$`Service Date`<- excel_numeric_to_date(SH_Serv$`Service Date`)
+OPH_Serv$`Service Date`<- excel_numeric_to_date(OPH_Serv$`Service Date`)
+RRH_Serv$`Service Date`<- excel_numeric_to_date(RRH_Serv$`Service Date`)
+
+TH_Serv$ProgramType = 'TH'
+PSH_Serv$ProgramType = 'PSH'
+OPH_Serv$ProgramType = 'OPH'
+RRH_Serv$ProgramType = 'RRH'
+SO_Serv$ProgramType = 'SO'
+ES_Serv$ProgramType = 'ES'
+SH_Serv$ProgramType = 'SH'
 
 
 # Alluvial plot # 1
@@ -53,25 +68,25 @@ SH$prog_type = 'SH'
 # Join 3 tables to TH, group by TH, housed type, count unique ppl
 
 
-aluv_test <- TH %>% select(Client.ID, prog_type) %>%
-  rename(start=prog_type)
+aluv_test <- TH_Serv %>% select(`Client ID`, ProgramType) %>%
+  rename(start=ProgramType)
 
 aluv_test <- left_join(aluv_test,
-                       rbind(RRH %>% select(Client.ID, prog_type),
-                             PSH %>% select(Client.ID, prog_type),
-                             OPH %>% select(Client.ID, prog_type)),
-                       by='Client.ID')
+                       rbind(RRH_Serv %>% select(`Client ID`, ProgramType),
+                             PSH_Serv %>% select(`Client ID`, ProgramType),
+                             OPH_Serv %>% select(`Client ID`, ProgramType)),
+                       by='Client ID')
 
 aluv_comb <- 
   unique(aluv_test) %>%
-  count(start, prog_type)
+  count(start, ProgramType)
 
 # The most basic alluvial. Just shows that, from TH, ~80% don't get housing services, ~5% go to PSH and ~15% got to RRH
 # Above percentages are eyeball estimates
 
 ggplot(as.data.frame(aluv_comb),
-       aes(y = n, axis1 = start, axis2 = prog_type)) +
-  geom_alluvium(aes(fill=prog_type), width = 1/12) +
+       aes(y = n, axis1 = start, axis2 = ProgramType)) +
+  geom_alluvium(aes(fill=ProgramType), width = 1/12) +
   geom_stratum(width = 1/12, fill = "black", color = "grey") +
   geom_label(stat = "stratum", aes(label = after_stat(stratum))) +
   scale_x_discrete(limits = c("start", "prog_type"), expand = c(.05, .05)) +
@@ -81,20 +96,20 @@ ggplot(as.data.frame(aluv_comb),
 ## Alluvial plot # 2
 ## This plot tracks unique individuals by homelessness service, race, and housing service
 
-race_dem <- rbind(TH_Dem, SO_Dem, SH_Dem, PSH_Dem, RRH_Dem, PH_Dem, ES_Dem) %>%
+race_dem <- rbind(TH_Demo, SO_Demo, SH_Demo, PSH_Demo, RRH_Demo, PH_Demo, ES_Demo) %>%
   select(clientid, Races) %>%
   unique()
 
-homeless <- rbind(SO, ES, TH, SH) %>%
-  select(Client.ID, prog_type) %>%
+homeless <- rbind(SO_Serv, ES_Serv, TH_Serv, SH_Serv) %>%
+  select(`Client ID`, ProgramType) %>%
   unique() %>%
-  rename(homeless_serv=prog_type) %>%
-  left_join(., race_dem, by=c("Client.ID" = "clientid"))
+  rename(homeless_serv=ProgramType) %>%
+  left_join(., race_dem, by=c("Client ID" = "clientid"))
 
-housed <- rbind(PSH, OPH, RRH) %>%
-  select(Client.ID, prog_type) %>%
+housed <- rbind(PSH_Serv, OPH_Serv, RRH_Serv) %>%
+  select(`Client ID`, ProgramType) %>%
   unique() %>%
-  rename(housed_serv=prog_type)
+  rename(housed_serv=ProgramType)
 
 alluv <- left_join(homeless, housed) %>%
   count(homeless_serv, Races, housed_serv) %>%
@@ -121,20 +136,20 @@ ggplot(as.data.frame(alluv),
 ## This is the same as above, but adds in ethnicity ##
 ## This plot tracks unique individuals by homelessness service, race, and housing service
 
-race_dem <- rbind(TH_Dem, SO_Dem, SH_Dem, PSH_Dem, RRH_Dem, PH_Dem, ES_Dem) %>%
+race_dem <- rbind(TH_Demo, SO_Demo, SH_Demo, PSH_Demo, RRH_Demo, PH_Demo, ES_Demo) %>%
   select(clientid, Races, HUDEthnicity) %>%
   unique()
 
-homeless <- rbind(SO, ES, TH, SH) %>%
-  select(Client.ID, prog_type) %>%
+homeless <- rbind(SO_Serv, ES_Serv, TH_Serv, SH_Serv) %>%
+  select(`Client ID`, ProgramType) %>%
   unique() %>%
-  rename(homeless_serv=prog_type) %>%
-  left_join(., race_dem, by=c("Client.ID" = "clientid"))
+  rename(homeless_serv=ProgramType) %>%
+  left_join(., race_dem, by=c("Client ID" = "clientid"))
 
-housed <- rbind(PSH, OPH, RRH) %>%
-  select(Client.ID, prog_type) %>%
+housed <- rbind(PSH_Serv, OPH_Serv, RRH_Serv) %>%
+  select(`Client ID`, ProgramType) %>%
   unique() %>%
-  rename(housed_serv=prog_type)
+  rename(housed_serv=ProgramType)
 
 alluv <- left_join(homeless, housed) %>%
   count(homeless_serv, Races, HUDEthnicity, housed_serv) %>%
@@ -166,7 +181,7 @@ ggplot(as.data.frame(alluv),
 # It is not yet clear how people are assigned to a demo table -- perhaps most recent type of service received?
 # If above hypothesis is true, this plot would show the most recent prior --> exit that an individual went through
 
-all_dem <- rbind(TH_Dem, SO_Dem, SH_Dem, PSH_Dem, RRH_Dem, PH_Dem, ES_Dem) %>%
+all_dem <- rbind(TH_Demo, SO_Demo, SH_Demo, PSH_Demo, RRH_Demo, PH_Demo, ES_Demo) %>%
   unique() # not necessary
 
 priorToExit <- all_dem %>% 
@@ -194,42 +209,108 @@ ggplot(as.data.frame(priorToExit %>% filter(n>150)),
 # find all people that were housed
 # join the earliest homelessness date that happened after
 
-housed <- rbind(OPH, PSH, RRH) %>% select('Client ID', 'Service Date')
-housed$`Service Date` <- lubridate::ymd(housed$`Service Date`)
-housed <- housed[order(housed$`Client ID`, housed$'Service Date'),] # order by client ID, then service date
-housed <- housed %>% 
-  rename(HousedDate = 'Service Date', ClientID = 'Client ID') %>%
-  group_by(ClientID) %>%
-  summarise(HousedDate=max(HousedDate))
-  
 
-homeless <- rbind(SO, ES, TH, SH) %>% select('Client ID', 'Service Date')
+# Ordered list of all housing services dates client in chronological order
+housed <- rbind(PSH_Serv, RRH_Serv, OPH_Serv) %>% select('Client ID', 'Service Date', Service, ProgramType)
+housed$`Service Date` <- lubridate::ymd(housed$`Service Date`)
+housed <- housed[order(housed$`Client ID`, housed$'Service Date'),] # Order by client ID, then service date
+housed <- housed %>% 
+  rename(ServiceDate = 'Service Date', ClientID = 'Client ID') %>%
+  unique() # Unique client, date service received
+housed$ServiceType <- 'Housed' #Housing service
+
+# Ordered list of all homelessness services dates client in chronological order
+homeless <- rbind(SO_Serv, ES_Serv, TH_Serv, SH_Serv) %>% 
+  select('Client ID', 'Service Date', Service, ProgramType)
 homeless$`Service Date` <- lubridate::ymd(homeless$`Service Date`)
 homeless <- homeless[order(homeless$`Client ID`, homeless$'Service Date'),]
-homeless <- homeless %>% rename(HomelessDate = 'Service Date', ClientID = 'Client ID')
-homeless <- unique(homeless)
+homeless <- homeless %>% 
+  rename(ServiceDate = 'Service Date', ClientID = 'Client ID') %>%
+  unique()
+homeless$ServiceType <- 'Homelessness'
 
-# This isnt working
-homeless_sub <- homeless %>%
-  filter(ClientID %in% housed$ClientID)
+# Create a filtered list of events when clients have received a homelessness service after a housing service
+h_combined <- rbind(housed, homeless)
+h_combined <- h_combined[order(h_combined$ClientID, h_combined$ServiceDate),]
+# Create a set of lead fields that indicate information about the next service received
+h_combined$NextClientID <- lead(h_combined$ClientID)
+h_combined$NextServiceDate <- lead(h_combined$ServiceDate)
+h_combined$NextService <- lead(h_combined$Service)
+h_combined$NextProgramType <- lead(h_combined$ProgramType)
+h_combined$NextServiceType <- lead(h_combined$ServiceType)
 
+HousedToHoused <- h_combined %>%
+  filter(ClientID == NextClientID) %>%
+  filter(ServiceType == 'Housed') %>%
+  filter(NextServiceType == 'Housed')
+length(unique(HousedToHoused$ClientID)) # 2,985 unique ppl housed then not homeless again
+length(unique(HousedToHoused$ClientID)) / length(unique(housed$ClientID)) # 85% don't become homeless again
 
-dplyrjoin <- housed %>%
-  left_join(homeless)[order(dplyrjoin$ClientID, dplyrjoin$HomelessDate),]
-  #filter(HousedDate < HomelessDate) #this appears to not return results
+HousedToHomeless <- h_combined %>%
+  filter(ClientID == NextClientID) %>%
+  filter(ServiceType == 'Housed') %>%
+  filter(NextServiceType == 'Homelessness')
+length(unique(HousedToHomeless$ClientID))
+length(unique(HousedToHomeless$ClientID)) / length(unique(housed$ClientID))
 
-#it would appear that there are no homeless services being rendered after housing services...
+# Add in demographic features
+HousedToHomeless <- left_join(HousedToHomeless, 
+                        all_dem %>% select(clientid, Races, VeteranStatus, DisablingCondition), 
+                        by = c('ClientID' = 'clientid'))
+
+# Evaluate time from housed to homeless
+# Large majority of people receiving homelessness services very soon after housing services
+HousedToHomeless$ServiceDateDiff <- difftime(HousedToHomeless$NextServiceDate, HousedToHomeless$ServiceDate, units='days')
+ggplot(HousedToHomeless %>% filter(ServiceDateDiff>0), aes(x=ServiceDateDiff)) +
+  geom_histogram(fill='light blue')
   
+# Make alluvial plot data sets from those aggregates
+recidivism_alluvial <- HousedToHomeless %>% filter(ServiceDateDiff>0) %>%
+  count(ProgramType, NextProgramType, Races, DisablingCondition) %>%
+  filter(n>4)
+
+recidivism_alluvial_2 <- HousedToHomeless %>%
+  count(Service, DisablingCondition, NextService) %>%
+  filter(n>10) 
+
+# The types of programs people flow into when they recidivate
+# Demonstration of faceting by disabling condition
+# These represent transitions in time, not distinct individuals
+p <- ggplot(as.data.frame(recidivism_alluvial),
+       aes(y = n, axis1 = ProgramType, axis2 = NextProgramType)) +
+  geom_alluvium(aes(fill=Races), width = 1/12) +
+  geom_stratum(width = 1/12, fill = "light grey", color = "grey") +
+  geom_label(stat = "stratum", aes(label = after_stat(stratum))) +
+  scale_x_discrete(limits = c("ProgramType", "NextProgramType"), expand = c(.05, .05)) +
+  scale_fill_brewer(type = "qual", palette = "Set3", direction = -1, na.value = '#f7b75e') +
+  ggtitle('Recidivism from Housed to Homeless by Program Type, Faceted by Disability')
+p +  facet_grid(cols = vars(DisablingCondition))
+
+ggplot(as.data.frame(recidivism_alluvial_2),
+       aes(y = n, axis1 = Service, axis2 = NextService)) +
+  geom_alluvium(aes(fill=DisablingCondition), width = 1/12) +
+  geom_stratum(width = 1/12, fill = "light grey", color = "grey") +
+  geom_label(stat = "stratum", aes(label = after_stat(stratum))) +
+  scale_x_discrete(limits = c("Service", "NextService"), expand = c(.05, .05)) +
+  scale_fill_brewer(type = "qual", palette = "Set3", direction = -1, na.value = '#f7b75e')
+
+# Next, look for people with "housed" exit destinations and look for them in homeless services after their exit
+ServicesPostExit <-left_join(
+  all_dem %>% select(clientid, ExitDestination, ExitDate),
+  h_combined, 
+  by = c('clientid' = 'ClientID')) %>%
+  filter(ServiceDate > ExitDate)
 
 
-library('sqldf')
-test <- sqldf("
-           SELECT *
-           FROM housed h1
-           LEFT JOIN homeless h2 
-            ON h1.`Client ID` = h2.`Client ID` 
-            AND h1.`HousedDate` < h2.`HomelessDate`
-           ")
+ggplot(as.data.frame(ServicesPostExit %>% count(ExitDestination, ProgramType, ServiceType) %>% 
+                       filter(n>100) %>% filter(ExitDestination!='No exit interview completed (30)')),
+       aes(y = n, axis1 = ExitDestination, axis2 = ProgramType)) +
+  geom_alluvium(aes(fill=ServiceType), width = 1/12) +
+  geom_stratum(width = 1/12, fill = "light grey", color = "grey") +
+  geom_label(stat = "stratum", aes(label = after_stat(stratum))) +
+  scale_x_discrete(limits = c("ExitDestination", "ProgramType"), expand = c(.05, .05)) +
+  scale_fill_brewer(type = "qual", palette = "Set3", direction = -1)
+
 
 ### ARCHIVE CODE ###
 
